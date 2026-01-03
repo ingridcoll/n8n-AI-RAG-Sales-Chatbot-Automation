@@ -1,0 +1,1244 @@
+{
+  "name": "AI RAG Sales User-Facing Chatbot (Demo)",
+  "nodes": [
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        400,
+        1296
+      ],
+      "id": "dd51f496-2289-4508-88c1-9f8431fc784a",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "QBPgSshm7agIauSV",
+          "name": "ingridjonec@gmail.com"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "fileFolder",
+        "returnAll": true,
+        "filter": {
+          "folderId": {
+            "__rl": true,
+            "value": "1c7Ft_gmaZlmEf6C_86d6LaZehrR-iPPQ",
+            "mode": "list",
+            "cachedResultName": "Sales Collateral",
+            "cachedResultUrl": "https://drive.google.com/drive/folders/1c7Ft_gmaZlmEf6C_86d6LaZehrR-iPPQ"
+          }
+        },
+        "options": {
+          "fields": [
+            "id",
+            "version",
+            "name"
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        560,
+        -48
+      ],
+      "id": "8d7c4823-a0c5-44db-9d85-40a219f6c13d",
+      "name": "List All Files in Folder",
+      "notesInFlow": true,
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "YWGtOQG046kk6sAD",
+          "name": "fortuna.develops@gmail.com"
+        }
+      },
+      "notes": "Search files and folders"
+    },
+    {
+      "parameters": {
+        "batchSize": 20,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        912,
+        -96
+      ],
+      "id": "7aa10bd6-824f-41c5-867b-90f6066a43f3",
+      "name": "Loop Over Each File",
+      "notesInFlow": true,
+      "notes": "Loop Over Items"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "ldCGkHdnx3fO1u72",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/ldCGkHdnx3fO1u72",
+          "cachedResultName": "AI RAG Sales User-Facing Chatbot (Demo)"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "id": "={{ $json.id }}",
+            "version": "={{ $json.version }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string"
+            },
+            {
+              "id": "version",
+              "displayName": "version",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string"
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "mode": "each",
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        1168,
+        -80
+      ],
+      "id": "5a79d7c7-dec4-4621-8d76-e9a3b969a139",
+      "name": "Call 'Process File' Flow",
+      "alwaysOutputData": true,
+      "notesInFlow": true,
+      "notes": "Call Another Flow"
+    },
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "id"
+            },
+            {
+              "name": "version"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        96,
+        272
+      ],
+      "id": "e77dba8a-df22-4601-9558-1edc4930fbe9",
+      "name": "Process File",
+      "notesInFlow": true,
+      "notes": "When Executed by Another Workflow"
+    },
+    {
+      "parameters": {
+        "operation": "removeItemsSeenInPreviousExecutions",
+        "dedupeValue": "={{ $json.id + $json.version }}",
+        "options": {
+          "scope": "node",
+          "historySize": 10000
+        }
+      },
+      "type": "n8n-nodes-base.removeDuplicates",
+      "typeVersion": 2,
+      "position": [
+        464,
+        272
+      ],
+      "id": "a28fa1c4-1aa9-42ce-8ac4-d27ea6a9301e",
+      "name": "Process Only New Versions of Old Files",
+      "notesInFlow": true,
+      "notes": "Remove Duplicates"
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.memoryPostgresChat",
+      "typeVersion": 1.3,
+      "position": [
+        544,
+        1296
+      ],
+      "id": "e576b14b-f1d9-4590-b4bf-170decbe2b97",
+      "name": "Postgres Chat Memory",
+      "credentials": {
+        "postgres": {
+          "id": "yMDpKO1YjgjRnqSQ",
+          "name": "fortuna.develops@gmail.com"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "insert",
+        "tableName": {
+          "__rl": true,
+          "value": "documents",
+          "mode": "list",
+          "cachedResultName": "documents"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreSupabase",
+      "typeVersion": 1.3,
+      "position": [
+        2064,
+        208
+      ],
+      "id": "d855eac4-0903-4911-9adc-40ea2459e7d2",
+      "name": "Store Vector in Supabase",
+      "notesInFlow": true,
+      "credentials": {
+        "supabaseApi": {
+          "id": "TioCG7eNSROKhdgm",
+          "name": "fortuna.develops@gmail.com AI RAG Sales Chatbot DB"
+        }
+      },
+      "notes": "Supabase Vector Store"
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.embeddingsGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        992,
+        1392
+      ],
+      "id": "f8222588-d33e-4cc6-9fd1-69e07ce22531",
+      "name": "Embeddings Google Gemini2",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "QBPgSshm7agIauSV",
+          "name": "ingridjonec@gmail.com"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.rerankerCohere",
+      "typeVersion": 1,
+      "position": [
+        1152,
+        1392
+      ],
+      "id": "09a7cc35-2bef-4b30-a1c2-59f973518eb7",
+      "name": "Reranker Cohere",
+      "credentials": {
+        "cohereApi": {
+          "id": "or0cWM3enBB2O5La",
+          "name": "fortuna.develops@gmail.com"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.toolCalculator",
+      "typeVersion": 1,
+      "position": [
+        672,
+        1296
+      ],
+      "id": "e5049257-84d2-487a-a428-5c4df9b93920",
+      "name": "Calculator"
+    },
+    {
+      "parameters": {
+        "mode": "retrieve-as-tool",
+        "toolDescription": "Use this tool to retrieve data from the sales knowledge base. ",
+        "tableName": {
+          "__rl": true,
+          "value": "documents",
+          "mode": "list",
+          "cachedResultName": "documents"
+        },
+        "topK": 20,
+        "useReranker": true,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreSupabase",
+      "typeVersion": 1.3,
+      "position": [
+        1024,
+        1264
+      ],
+      "id": "e3efcba3-d487-4c23-96d8-6756debf0116",
+      "name": "Supabase Retrive Documents",
+      "credentials": {
+        "supabaseApi": {
+          "id": "TioCG7eNSROKhdgm",
+          "name": "fortuna.develops@gmail.com AI RAG Sales Chatbot DB"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "public": true,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        96,
+        1088
+      ],
+      "id": "ecc302d5-2d93-4922-97f6-63e1b3b32027",
+      "name": "When chat message received",
+      "webhookId": "b2b8c560-b672-4b60-a16f-8cb932eb77d4"
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.embeddingsGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        2032,
+        368
+      ],
+      "id": "7b102c4b-62e1-42dd-ba30-eafc16a04762",
+      "name": "Embeddings Google Gemini",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "QBPgSshm7agIauSV",
+          "name": "ingridjonec@gmail.com"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"description\": \"\"\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        1392,
+        368
+      ],
+      "id": "c8822ee9-d22c-4005-8ad6-dc702256feb8",
+      "name": "Structured Output Parser"
+    },
+    {
+      "parameters": {
+        "amount": 10
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        2624,
+        272
+      ],
+      "id": "a95d022a-cd54-4770-9609-3ce8736eec86",
+      "name": "Wait for Rate Limits to Reset",
+      "webhookId": "049eba2f-640a-48ae-b060-46672b9df71c"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "de219a80-7893-4218-9c97-511017c6dfa1",
+              "name": "documentation",
+              "value": "={{ $('Convert to JSON').first().json.text }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1648,
+        272
+      ],
+      "id": "6370ec6e-bb01-4c96-8fb6-609305437960",
+      "name": "Prepare for Ingestion"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        1184,
+        368
+      ],
+      "id": "5ce22a88-84e8-4d4f-ab80-ae01d623c75e",
+      "name": "Google Gemini Chat Contextualizer",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "QBPgSshm7agIauSV",
+          "name": "ingridjonec@gmail.com"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        2432,
+        272
+      ],
+      "id": "cec1f223-caa5-4019-b4e0-ffe29361b91f",
+      "name": "Consolidate the Output into One"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        1824,
+        272
+      ],
+      "id": "f4da28dd-6153-47c7-8a4a-b63f6b6865a8",
+      "name": "Wait",
+      "webhookId": "c88a4e88-b402-48d8-9dfe-4e471039d1db"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=# Document Title\n{{ $('Convert to JSON').first().json.info.Title }}\n\n# Document Contents\n{{ $('Convert to JSON').first().json.text }}",
+        "hasOutputParser": true,
+        "messages": {
+          "messageValues": [
+            {
+              "message": "Based on the provided page title and contents, extract a 1 sentence description that summarizes the essential concepts in the page."
+            }
+          ]
+        },
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.7,
+      "position": [
+        1216,
+        208
+      ],
+      "id": "7c61f4af-5b0d-4309-aa48-59609899211e",
+      "name": "Contextualize Each File",
+      "retryOnFail": true
+    },
+    {
+      "parameters": {
+        "options": {
+          "metadata": {
+            "metadataValues": [
+              {
+                "name": "document_description",
+                "value": "={{ $('Contextualize Each File').first().json.output.description }}"
+              },
+              {
+                "name": "number_of_pages",
+                "value": "={{ $('Convert to JSON').item.json.numpages }}"
+              },
+              {
+                "name": "language",
+                "value": "={{ $('Convert to JSON').first().json.info.Language }}"
+              },
+              {
+                "name": "document_title",
+                "value": "={{ $('Convert to JSON').item.json.info.Title }}"
+              },
+              {
+                "name": "version",
+                "value": "={{ $('Convert to JSON').item.json.version }}"
+              }
+            ]
+          }
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.documentDefaultDataLoader",
+      "typeVersion": 1.1,
+      "position": [
+        2208,
+        368
+      ],
+      "id": "a3f6ff3b-84bf-42b4-9505-4d9cc3cf2d13",
+      "name": "Default Data Loader (Rich Metadata)"
+    },
+    {
+      "parameters": {
+        "content": "## 1. List All Files in Google Drive Folder for RAG Ingestion\nRetrieves a list of all files within a specified Google Drive folder so they can later be processed, chunked, embedded, and ingested into a RAG pipeline.\n\n**Input**:\n-Google Drive Folder Name: the name of the folder containing sales documents.\n\nFetches all file metadata, including `version`, `name` and `id`, which ensures always keeping the latest version of each file in the vector database.\n\n**Output**:\n-A list of files with metadata including file ID, name, and version.\n",
+        "height": 608,
+        "width": 384,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        400,
+        -448
+      ],
+      "typeVersion": 1,
+      "id": "b368c128-69c3-4b6d-84cb-3756447b936e",
+      "name": "Sticky Note4"
+    },
+    {
+      "parameters": {
+        "content": "## 2. Loop Through Files and Trigger RAG Ingestion Subflow\nIterates over each file returned from the Google Drive folder and invokes a dedicated subflow that handles RAG ingestion for a single file, ensuring efficient memory usage and stable performance.\n\n**Input**:\n-The array of files, including metadata from the previous node (`id`, `name`, `version`).\n\nProcesses files sequentially, passing one file at a time into the subflow to avoid loading multiple documents into memory simultaneously.\n\n**Output**:\n-For each file: a successful trigger of the RAG ingestion subflow with the file metadata passed as input.\n-On failure: the loop stops for the current file, logs the error, and continues with the next file to prevent blocking the entire ingestion run.\n",
+        "height": 656,
+        "width": 576,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        800,
+        -496
+      ],
+      "typeVersion": 1,
+      "id": "f5ba4257-a488-402b-9687-7ed8e284e349",
+      "name": "Sticky Note5"
+    },
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "triggerOn": "specificFolder",
+        "folderToWatch": {
+          "__rl": true,
+          "value": "1c7Ft_gmaZlmEf6C_86d6LaZehrR-iPPQ",
+          "mode": "list",
+          "cachedResultName": "Sales Collateral",
+          "cachedResultUrl": "https://drive.google.com/drive/folders/1c7Ft_gmaZlmEf6C_86d6LaZehrR-iPPQ"
+        },
+        "event": "fileUpdated",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDriveTrigger",
+      "typeVersion": 1,
+      "position": [
+        192,
+        0
+      ],
+      "id": "5d587bcd-1318-4273-a7da-89fb1745eb90",
+      "name": "When a File is Updated",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "YWGtOQG046kk6sAD",
+          "name": "fortuna.develops@gmail.com"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "triggerOn": "specificFolder",
+        "folderToWatch": {
+          "__rl": true,
+          "value": "1c7Ft_gmaZlmEf6C_86d6LaZehrR-iPPQ",
+          "mode": "list",
+          "cachedResultName": "Sales Collateral",
+          "cachedResultUrl": "https://drive.google.com/drive/folders/1c7Ft_gmaZlmEf6C_86d6LaZehrR-iPPQ"
+        },
+        "event": "fileCreated",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDriveTrigger",
+      "typeVersion": 1,
+      "position": [
+        192,
+        -160
+      ],
+      "id": "2fd2f25c-d574-4ffe-b440-477f1910331f",
+      "name": "When a File is Created",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "YWGtOQG046kk6sAD",
+          "name": "fortuna.develops@gmail.com"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        32,
+        -64
+      ],
+      "id": "a73a58a1-1e39-449c-84d2-fdef821d6e89",
+      "name": "Manually Trigger Ingestion"
+    },
+    {
+      "parameters": {
+        "content": "## 0. TRIGGERS: When a File is Created or Updated in Google Drive Folder\n- The ingestion workflow triggers any time a new file is added or updated to the Google Drive folder where the training data is stored.\n- The workflow can also be triggered manually.\n",
+        "height": 560,
+        "width": 416
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -32,
+        -400
+      ],
+      "typeVersion": 1,
+      "id": "98131063-b99c-427b-b7b9-363d4d6848f9",
+      "name": "Sticky Note6"
+    },
+    {
+      "parameters": {
+        "content": "## Phase 1: Pull All Files to Be Ingested\n",
+        "height": 688,
+        "width": 2896,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -48,
+        -512
+      ],
+      "id": "83fa17fd-e3ca-4c9d-973f-e1423bbe0daf",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "content": "## Phase 2: Process Each File, Contextualize, Add Metadata, and Store in Supabase Vector Database…\n\n",
+        "height": 800,
+        "width": 2896,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -48,
+        176
+      ],
+      "id": "6221800f-0b59-435b-b0be-fcb9d0d21613",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {
+        "content": "\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n## 0. TRIGGER: Called By Main Workflow\n- This workflow is triggered by the main workflow (above).\n- Each run is completely isolated from the previous runs to avoid losing results from successful runs if one fails.\n",
+        "height": 416,
+        "width": 352
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -32,
+        240
+      ],
+      "typeVersion": 1,
+      "id": "2e2168de-ab78-4b5a-b5b4-f49603dc9ac9",
+      "name": "Sticky Note7"
+    },
+    {
+      "parameters": {
+        "content": "\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n## 1. Only Process New Files and Versions\nFilters the files whose (`id`, `version`) combination does not already exist in the vector database, ensuring only new or updated documents are ingested.\n\n**Input**:\n-The current file's `id` and `version`.\n\nCompares each file against existing records to detect changes at the file version level.\n\n**Output**:\n-Only files or versions that do not exist in the database yet.\n",
+        "height": 576,
+        "width": 368,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        336,
+        240
+      ],
+      "typeVersion": 1,
+      "id": "0dec830f-578a-4bfc-942b-b394dbbfb298",
+      "name": "Sticky Note8"
+    },
+    {
+      "parameters": {
+        "content": "## A Self-Updating Retrieval-Augmented Generation System that Turns Sales Documents into an AI Chatbot\n### Technologies used: \n- *Google Drive* for centralized sales collateral storage\n- *Google Gemini* for chunk contextualization and chat response generation\n- *Supabase Vector Database* for semantic document retrieval\n- *Cohere Reranker* to optimize relevance and reduce hallucinations\n- *Postgres* for persistent chat memory\n- *Calculator Tool* for deterministic numeric answers\n\n## This fully automated AI Sales RAG Agent transforms your company’s sales collateral into a conversational AI assistant that answers questions about your products, services, and offers, accurately, in real-time, and with full context from your documents. Ideal for any sales or customer-facing team that wants to provide instant, reliable answers based on internal knowledge, while maintaining conversation memory.\n### This automation was created by *Ingrid Coll*. See my other projects on GitHub at [github.com/ingridcoll](https://github.com/ingridcoll) or send me a LinkedIn message at [linkedin.com/in/ingridcoll](https://www.linkedin.com/in/ingridcoll/) with any questions or business inquiries!\n\n## In PHASE 1: Pull All Files to Be Ingested...\n### Detects changes in the central sales collateral folder and loops through each file for ingestion.\nThe main workflow is automatically triggered whenever a new file is added to the Google Drive folder or an existing file is updated.\nAll files in the folder are listed and passed into a loop that processes each file individually.\nThis ensures that the system continuously ingests the latest sales documents without missing updates or requiring manual intervention.\nThe loop structure optimizes memory usage by handling one file at a time, preparing it for downstream chunking, contextualization, and embedding.\n## In PHASE 2: Process Each File, Contextualize, Add Metadata, and Store in Supabase Vector Database…\n### Downloads each file, breaks it into chunks, generates contextual descriptions, enriches with metadata, and stores embeddings for semantic retrieval.\nEach file from the loop is downloaded from Google Drive using its id.\nContent is split into manageable chunks for efficient processing.\nGoogle Gemini generates a 1-sentence contextual description for each chunk to improve retrieval relevance.\nEach chunk is enriched with rich metadata, including:\n`document_description` (AI-contextualized summary)\n`document_title`\n`number_of_pages`\n`language`\n`version`\nThe processed chunks and embeddings are stored in the Supabase vector database, making the content searchable and ready for use by the AI Sales Chatbot.\nThis phase ensures accurate, structured, and fully contextualized data is available for retrieval.\n",
+        "height": 1040,
+        "width": 1008,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -1056,
+        -512
+      ],
+      "typeVersion": 1,
+      "id": "5b048840-0432-433c-9fc8-8f1efbdc0c92",
+      "name": "Sticky Note14"
+    },
+    {
+      "parameters": {
+        "content": "# AI Sales RAG User-Facing Chatbot Trained on Company Data with n8n",
+        "height": 80,
+        "width": 3904,
+        "color": 7
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -1056,
+        -592
+      ],
+      "typeVersion": 1,
+      "id": "34c4493a-85cb-47ed-9daa-4730803f3c4d",
+      "name": "Sticky Note15"
+    },
+    {
+      "parameters": {
+        "content": "\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n## 2. Download File and Convert Text to JSON\nDownloads the current file in the loop from Google Drive using its file ID and transforms the extracted text into a structured JSON format for RAG processing.\n\n**Input**:\n-The current file's `id`.\n\nFetches the latest file content from Google Drive and extracts raw text based on the file type.\n\n**Output**:\n-Structured JSON containing the extracted text and file metadata (`id`, `name`, `version`).\n-On failure: returns an error for the current file, logs the issue, and allows the loop to continue with the next file.\n",
+        "height": 640,
+        "width": 368,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        720,
+        240
+      ],
+      "typeVersion": 1,
+      "id": "ae61baae-d032-4a7f-988f-2bc1c293a42d",
+      "name": "Sticky Note9"
+    },
+    {
+      "parameters": {
+        "operation": "download",
+        "fileId": {
+          "__rl": true,
+          "value": "={{ $('Process File').first().json.id }}",
+          "mode": "id"
+        },
+        "options": {
+          "googleFileConversion": {
+            "conversion": {
+              "docsToFormat": "application/pdf"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        768,
+        272
+      ],
+      "id": "a5599acb-6b0c-47ed-8fbc-31c6d6c971af",
+      "name": "Download Current File",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "YWGtOQG046kk6sAD",
+          "name": "fortuna.develops@gmail.com"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "pdf",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1.1,
+      "position": [
+        944,
+        272
+      ],
+      "id": "abaec01e-7346-4a72-978c-34aae640d972",
+      "name": "Convert to JSON"
+    },
+    {
+      "parameters": {
+        "content": "\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n## 3. AI Contextualization of Text Chunks with Google Gemini\nUses an AI node with Google Gemini to analyze each text chunk and generate a concise 1-sentence contextual description to improve retrieval quality by the AI Chatbot.\n\n**Input**:\n-The current's file extracted content from the previous step.\n-The file's title for context.\n\nIngests the chunk content and prompts Gemini to summarize what the chunk is about at a high level, without rewriting or adding new information.\n\n**Output**:\n-A JSON object containing a 1-sentence AI-generated context description.\n-On failure: returns an error for the current file, logs it, and continues processing remaining chunks.\n",
+        "height": 768,
+        "width": 464,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1104,
+        192
+      ],
+      "typeVersion": 1,
+      "id": "183433e5-8df5-48e9-b5be-eed57119c432",
+      "name": "Sticky Note10"
+    },
+    {
+      "parameters": {
+        "content": "\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n## 4. Prepare Content and Delay Before Vector Storage\nPulls the file's content from previous steps and applies a controlled delay before writing embeddings to the Supabase vector database to manage rate limits.\n\n**Input**:\n-Embedding Payload: finalized content structure ready for vector storage.\n\n**Output**:\n-A ready-to-store vector record sent to Supabase after a 5-second delay.\n-On failure: logs the error for the current record and allows the workflow to continue processing remaining chunks.",
+        "height": 592,
+        "width": 384,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1584,
+        240
+      ],
+      "typeVersion": 1,
+      "id": "4e536404-8ad5-4ce7-8f2a-0d1c434d11e9",
+      "name": "Sticky Note11"
+    },
+    {
+      "parameters": {
+        "content": "\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n## 5. Store Chunks with Google Gemini and Create Rich Metadata\nStores the file's content in Supabase and uses Google Gemini to break the document into chunks while enriching each chunk with standardized metadata for better retrieval and filtering.\n\n**Input**:\n-The file's text content.\n-The file's metadata: file ID, title, version, description (AI-contextualized summary), number of pages, and language.\n\n**Output**:\n-Chunked records stored in the Supabase vector database, including rich metadata.",
+        "height": 720,
+        "width": 384,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1984,
+        192
+      ],
+      "typeVersion": 1,
+      "id": "118d1275-eff7-4a7f-9e20-504bc477b403",
+      "name": "Sticky Note12"
+    },
+    {
+      "parameters": {
+        "content": "## INTERFACE: AI Sales Chatbot Trained on Company Data\n",
+        "height": 848,
+        "width": 2896,
+        "color": 3
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -48,
+        976
+      ],
+      "id": "a11a3077-91a9-4451-bea4-33a66f5f255a",
+      "name": "Sticky Note3"
+    },
+    {
+      "parameters": {
+        "content": "\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n## 0. TRIGGER: When A New Message Is Received\n- Users can interact and send messages via chat to the AI Sales Chatbot.\n- The chat interface can be embedded into a website, and formatted to align with the brand's style and format via CSS.\n",
+        "height": 432,
+        "width": 352
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -32,
+        1040
+      ],
+      "typeVersion": 1,
+      "id": "9f15e30f-c9f9-4159-bdf4-1ab6d7b3428c",
+      "name": "Sticky Note13"
+    },
+    {
+      "parameters": {
+        "content": "\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n## 1. AI Sales Chatbot for Company Knowledge Q&A\nHandles user questions about the company using an AI Sales Chatbot trained on internal company data, optimized for accurate and grounded responses.\n\n**Input**:\n-User Message: the user’s question or request.\n-Session ID: used to retrieve and store chat history.\n\nUses the Google Gemini chat model for response generation, retrieves relevant context from the vector database via metadata filtering, applies Cohere reranking to prioritize the most relevant chunks, and maintains conversational memory in a Postgres database. A calculator tool is available for precise numeric responses.\n\n**Output**:\n-A context-aware, grounded response based on company data.\n-Updated chat memory stored in Postgres for future chats.\n",
+        "height": 768,
+        "width": 1056,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        336,
+        1040
+      ],
+      "typeVersion": 1,
+      "id": "329aa958-3114-46c2-ab70-c244a129fc97",
+      "name": "Sticky Note16"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.chatInput }}",
+        "options": {
+          "systemMessage": "=## Role\nYou are an External AI RAG Agent for Central Money. Your responsibility is to directly retrieve, synthesize, and answer user questions using external, public-facing knowledge only. You query a vector database containing indexed external sources and respond to the user with accurate, grounded information, keeping a friendly, modern tone. Use a casual, conversational style.\n\nYou do not route requests, delegate tasks, or call other agents. You are the sole retriever and responder.\n\n## Context\nThe company you work for is called Central Money. Central Money is a unified financial intelligence platform designed for SMBs and mid-market companies. It helps finance teams consolidate bank data, monitor cash flow, forecast revenue, and automate financial workflows through real-time analytics and integrations with core systems. The date for today is {{ $now.setZone(\"America/Chicago\"); }}.\n\n## Rules\n- Identify objections and look up the objection handling guide.\n- Only answer questions that can be supported by retrieved external sources.\n- Do not hallucinate features, pricing, or claims.\n- If the retrieved data is incomplete or ambiguous, say so clearly.\n- If no relevant information is found, state that explicitly.\n- Keep a casual and friendly tone, like you are talking to a friend.\n- Be concise but informative.\n- Do not reference internal systems, agents, or databases.\n- Do not imply access to private or proprietary data.\n- Avoid emojis and overuse of em dashes.\nIf the user’s request is unclear or too broad to retrieve accurately:\n1) Ask one focused clarifying question\n2) Do not retrieve data until clarification is provided\nIf you identify the user is interested in buying or talking to sales provide the following email: sales@centralmoney.com (add link to email directly mailto:sales@centralmoney.com) and clickable link to activate the trial: centralmoney.com/free-trial\nMake it sound like they won a free trial.\n\n## Examples\nUser's message: Your platform is so expensive.\n<Retrieve relevant external documents.>\nResponse: \"“I understand cost is a concern, especially when existing tools seem to work. Most of our customers initially felt the same until they calculated the hidden cost of manual forecasting and reconciliation. Central Money replaces hours of manual data consolidation and missed insights with automation and accuracy—often saving 20–40 hours per month per analyst. The ROI typically exceeds 5x within the first quarter.”\""
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        704,
+        1088
+      ],
+      "id": "58b1dd14-811a-42f5-b6da-672489e20bcd",
+      "name": "AI Sales Chatbot"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Sales Chatbot",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "List All Files in Folder": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Each File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Each File": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Call 'Process File' Flow",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call 'Process File' Flow": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Each File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Process File": {
+      "main": [
+        [
+          {
+            "node": "Process Only New Versions of Old Files",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Process Only New Versions of Old Files": {
+      "main": [
+        [
+          {
+            "node": "Download Current File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres Chat Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Sales Chatbot",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings Google Gemini2": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Supabase Retrive Documents",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Reranker Cohere": {
+      "ai_reranker": [
+        [
+          {
+            "node": "Supabase Retrive Documents",
+            "type": "ai_reranker",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Calculator": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Sales Chatbot",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Supabase Retrive Documents": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Sales Chatbot",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "AI Sales Chatbot",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings Google Gemini": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Store Vector in Supabase",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Contextualize Each File",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare for Ingestion": {
+      "main": [
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Contextualizer": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Contextualize Each File",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Consolidate the Output into One": {
+      "main": [
+        [
+          {
+            "node": "Wait for Rate Limits to Reset",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait": {
+      "main": [
+        [
+          {
+            "node": "Store Vector in Supabase",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Store Vector in Supabase": {
+      "main": [
+        [
+          {
+            "node": "Consolidate the Output into One",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Contextualize Each File": {
+      "main": [
+        [
+          {
+            "node": "Prepare for Ingestion",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Default Data Loader (Rich Metadata)": {
+      "ai_document": [
+        [
+          {
+            "node": "Store Vector in Supabase",
+            "type": "ai_document",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When a File is Created": {
+      "main": [
+        [
+          {
+            "node": "List All Files in Folder",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When a File is Updated": {
+      "main": [
+        [
+          {
+            "node": "List All Files in Folder",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Manually Trigger Ingestion": {
+      "main": [
+        [
+          {
+            "node": "List All Files in Folder",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download Current File": {
+      "main": [
+        [
+          {
+            "node": "Convert to JSON",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Convert to JSON": {
+      "main": [
+        [
+          {
+            "node": "Contextualize Each File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "2dc3c7fd-a7ed-4de1-b2aa-3359ada3fa48",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "6a5c2aba2d020b6c63c839df688d415d7b8bb079205e5e39b220163adfdc3348"
+  },
+  "id": "ldCGkHdnx3fO1u72",
+  "tags": [
+    {
+      "updatedAt": "2025-11-30T22:50:21.958Z",
+      "createdAt": "2025-11-30T22:50:21.958Z",
+      "id": "2q4P6yHxtcMXgTAE",
+      "name": "Slack"
+    },
+    {
+      "updatedAt": "2025-11-30T22:52:32.586Z",
+      "createdAt": "2025-11-30T22:52:32.586Z",
+      "id": "K8cUbVURWmOqOaKg",
+      "name": "Google Drive"
+    },
+    {
+      "updatedAt": "2025-11-30T22:52:32.594Z",
+      "createdAt": "2025-11-30T22:52:32.594Z",
+      "id": "NKFlKaCnnBm8VW6Y",
+      "name": "Reranker"
+    },
+    {
+      "updatedAt": "2025-11-30T22:52:32.599Z",
+      "createdAt": "2025-11-30T22:52:32.599Z",
+      "id": "QzVGhaxzFBV1l9SB",
+      "name": "Google Gemini"
+    },
+    {
+      "updatedAt": "2025-11-30T22:50:00.446Z",
+      "createdAt": "2025-11-30T22:50:00.446Z",
+      "id": "c3hOs5nM4HaEiaEY",
+      "name": "AI Agent"
+    },
+    {
+      "updatedAt": "2025-11-30T22:52:32.592Z",
+      "createdAt": "2025-11-30T22:52:32.592Z",
+      "id": "f0oddoXbMPAAmtxd",
+      "name": "AI"
+    },
+    {
+      "updatedAt": "2025-11-30T22:50:00.447Z",
+      "createdAt": "2025-11-30T22:50:00.447Z",
+      "id": "gXjMpJrIPg39TtLa",
+      "name": "RAG"
+    },
+    {
+      "updatedAt": "2025-11-30T20:02:55.847Z",
+      "createdAt": "2025-11-30T20:02:55.847Z",
+      "id": "jLba1EFdgMyk5Rn9",
+      "name": "Sales"
+    },
+    {
+      "updatedAt": "2025-11-30T22:52:32.580Z",
+      "createdAt": "2025-11-30T22:52:32.580Z",
+      "id": "jRrw9nBAAV1Dnz0j",
+      "name": "Supabase"
+    },
+    {
+      "updatedAt": "2025-11-30T22:52:32.583Z",
+      "createdAt": "2025-11-30T22:52:32.583Z",
+      "id": "rWMtxBaTEKnGG61v",
+      "name": "Postgres"
+    }
+  ]
+}
